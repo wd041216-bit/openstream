@@ -392,17 +392,8 @@ export function buildAssistantMessage(
 const MARKDOWN_TOOL_CALL_RE =
   /```(?:json)?\s*\n?\s*\{[\s\S]*?"name"\s*:\s*"([^"]+)"[\s\S]*?\}\s*\n?```/g;
 
-// Additional patterns for better tool call detection
-const ADDITIONAL_TOOL_CALL_PATTERNS = [
-  /```(?:json)?\s*\n?\s*\{[\s\S]*?"function"\s*:\s*\{[\s\S]*?"name"\s*:\s*"([^"]+)"[\s\S]*?\}\s*\n?```/g,
-  /\{[\s\S]*?"name"\s*:\s*"([^"]+)"[\s\S]*?"arguments"\s*:\s*(\{[\s\S]*?\})[\s\S]*?\}/g,
-  /<tool_call>([\s\S]*?)<\/tool_call>/g,
-];
-
 export function extractMarkdownToolCalls(content: string): OllamaToolCall[] {
   const results: OllamaToolCall[] = [];
-  
-  // Original pattern
   let match: RegExpExecArray | null;
   MARKDOWN_TOOL_CALL_RE.lastIndex = 0;
   while ((match = MARKDOWN_TOOL_CALL_RE.exec(content)) !== null) {
@@ -427,55 +418,16 @@ export function extractMarkdownToolCalls(content: string): OllamaToolCall[] {
       log.warn(`[manusilized] Failed to parse Markdown tool call: ${raw.slice(0, 120)}`);
     }
   }
-  
-  // Additional patterns
-  for (const pattern of ADDITIONAL_TOOL_CALL_PATTERNS) {
-    pattern.lastIndex = 0;
-    while ((match = pattern.exec(content)) !== null) {
-      try {
-        let parsed: Record<string, unknown>;
-        if (match.length >= 3) {
-          // For patterns with separate name and arguments captures
-          const name = match[1];
-          const argsRaw = match[2];
-          parsed = { name, arguments: JSON.parse(argsRaw) };
-        } else {
-          // For patterns with single capture containing full JSON
-          const raw = match[1] || match[0];
-          parsed = parseJsonPreservingUnsafeIntegers(raw) as Record<string, unknown>;
-        }
-        
-        const name = typeof parsed.name === "string" ? parsed.name : undefined;
-        if (!name) {
-          continue;
-        }
-        
-        const args =
-          parsed.arguments != null && typeof parsed.arguments === "object"
-            ? (parsed.arguments as Record<string, unknown>)
-            : parsed.parameters != null && typeof parsed.parameters === "object"
-              ? (parsed.parameters as Record<string, unknown>)
-              : {};
-              
-        results.push({ function: { name, arguments: args } });
-      } catch (err) {
-        log.warn(`[manusilized] Failed to parse additional tool call pattern: ${match[0].slice(0, 120)}`);
-      }
-    }
-  }
-  
   return results;
 }
 
-// ── NDJSON streaming parser with enhanced buffering ─────────────────────────
+// ── NDJSON streaming parser ─────────────────────────────────────────────────
 
 export async function* parseNdjsonStream(
   reader: ReadableStreamDefaultReader<Uint8Array>,
-  bufferSize: number = 1024, // Configurable buffer size for smoother streaming
 ): AsyncGenerator<OllamaChatResponse> {
   const decoder = new TextDecoder();
   let buffer = "";
-  let accumulatedBuffer = "";
 
   while (true) {
     const { done, value } = await reader.read();
@@ -483,60 +435,32 @@ export async function* parseNdjsonStream(
       break;
     }
     buffer += decoder.decode(value, { stream: true });
-    
-    // Accumulate buffer for smoother processing
-    accumulatedBuffer += buffer;
-    
-    // Only process when we have enough data or stream is ending
-    if (accumulatedBuffer.length >= bufferSize || done) {
-      const lines = accumulatedBuffer.split("\n");
-      accumulatedBuffer = lines.pop() ?? "";
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
 
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed) {
-          continue;
-        }
-        try {
-          yield parseJsonPreservingUnsafeIntegers(trimmed) as OllamaChatResponse;
-        } catch {
-          log.warn(`Skipping malformed NDJSON line: ${trimmed.slice(0, 120)}`);
-        }
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) {
+        continue;
       }
-      
-      // Reset buffer if we're done
-      if (done && accumulatedBuffer.trim()) {
-        try {
-          yield parseJsonPreservingUnsafeIntegers(accumBuffer.trim()) as OllamaChatResponse;
-        } catch {
-          log.warn(`Skipping malformed trailing data: ${accumulatedBuffer.trim().slice(0, 120)}`);
-        }
+      try {
+        yield parseJsonPreservingUnsafeIntegers(trimmed) as OllamaChatResponse;
+      } catch {
+        log.warn(`Skipping malformed NDJSON line: ${trimmed.slice(0, 120)}`);
       }
     }
-    
-    buffer = ""; // Reset buffer for next iteration
   }
 
-  // Handle any remaining data
-  if (accumulatedBuffer.trim()) {
+  if (buffer.trim()) {
     try {
-      yield parseJsonPreservingUnsafeIntegers(accumulatedBuffer.trim()) as OllamaChatResponse;
+      yield parseJsonPreservingUnsafeIntegers(buffer.trim()) as OllamaChatResponse;
     } catch {
-      log.warn(`Skipping malformed trailing data: ${accumulatedBuffer.trim().slice(0, 120)}`);
+      log.warn(`Skipping malformed trailing data: ${buffer.trim().slice(0, 120)}`);
     }
   }
 }
 
-// ── Enhanced Stream Configuration ───────────────────────────────────────────
-
-interface StreamConfig {
-  bufferSize?: number;
-  throttleDelay?: number;
-  enableThinkingOutput?: boolean;
-  streamInterval?: number;
-}
-
-// ── Main StreamFn factory with enhanced streaming ───────────────────────────
+// ── Main StreamFn factory ───────────────────────────────────────────────────
 
 function resolveOllamaChatUrl(baseUrl: string): string {
   const trimmed = baseUrl.trim().replace(/\/+$/, "");
@@ -557,16 +481,8 @@ function resolveOllamaModelHeaders(model: {
 export function createOllamaStreamFn(
   baseUrl: string,
   defaultHeaders?: Record<string, string>,
-  streamConfig?: StreamConfig,
 ): StreamFn {
   const chatUrl = resolveOllamaChatUrl(baseUrl);
-  const config = {
-    bufferSize: 1024,
-    throttleDelay: 10,
-    enableThinkingOutput: false,
-    streamInterval: 50,
-    ...streamConfig,
-  };
 
   return (model, context, options) => {
     const stream = createAssistantMessageEventStream();
@@ -582,11 +498,7 @@ export function createOllamaStreamFn(
 
         // Ollama defaults to num_ctx=4096 which is too small for large
         // system prompts + many tool definitions. Use model's contextWindow.
-        const ollamaOptions: Record<string, unknown> = { 
-          num_ctx: model.contextWindow ?? 65536,
-          // Enable thinking output for reasoning models
-          ...(config.enableThinkingOutput ? { thinking: true } : {})
-        };
+        const ollamaOptions: Record<string, unknown> = { num_ctx: model.contextWindow ?? 65536 };
         if (typeof options?.temperature === "number") {
           ollamaOptions.temperature = options.temperature;
         }
@@ -635,7 +547,6 @@ export function createOllamaStreamFn(
         const accumulatedToolCalls: OllamaToolCall[] = [];
         let finalResponse: OllamaChatResponse | undefined;
         let contentIndex = 0;
-        let lastStreamTime = Date.now();
 
         // Emit a "start" event so consumers know the assistant has begun.
         stream.push({
@@ -647,14 +558,7 @@ export function createOllamaStreamFn(
           }),
         });
 
-        for await (const chunk of parseNdjsonStream(reader, config.bufferSize)) {
-          const currentTime = Date.now();
-          
-          // Throttle streaming to reduce UI updates
-          if (currentTime - lastStreamTime < config.throttleDelay) {
-            continue;
-          }
-          
+        for await (const chunk of parseNdjsonStream(reader)) {
           // ── Real-time text_delta events (manusilized: incremental streaming) ──
           // Emit each content fragment immediately so the UI can render a
           // live typewriter effect instead of waiting for the full response.
@@ -670,16 +574,6 @@ export function createOllamaStreamFn(
                 content: [{ type: "text", text: accumulatedContent }],
                 stopReason: "stop",
               }),
-            });
-            
-            lastStreamTime = currentTime;
-          }
-
-          // Include thinking/reasoning output for enhanced experience
-          if (config.enableThinkingOutput && chunk.message?.thinking) {
-            stream.push({
-              type: "thinking_delta",
-              content: chunk.message.thinking,
             });
           }
 
@@ -716,8 +610,6 @@ export function createOllamaStreamFn(
             // user doesn't see raw JSON in the chat bubble.
             finalResponse.message.content = accumulatedContent
               .replace(MARKDOWN_TOOL_CALL_RE, "")
-              .replace(/```(?:json)?\s*\{[\s\S]*?\}\s*```/g, "")
-              .replace(/<tool_call>[\s\S]*?<\/tool_call>/g, "")
               .trim();
           }
         }
@@ -766,7 +658,6 @@ export function createOllamaStreamFn(
 export function createConfiguredOllamaStreamFn(params: {
   model: { baseUrl?: string; headers?: unknown };
   providerBaseUrl?: string;
-  streamConfig?: StreamConfig;
 }): StreamFn {
   const modelBaseUrl = typeof params.model.baseUrl === "string" ? params.model.baseUrl : undefined;
   return createOllamaStreamFn(
@@ -775,6 +666,5 @@ export function createConfiguredOllamaStreamFn(params: {
       providerBaseUrl: params.providerBaseUrl,
     }),
     resolveOllamaModelHeaders(params.model),
-    params.streamConfig,
   );
 }
