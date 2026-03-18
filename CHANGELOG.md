@@ -7,14 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.2.1] - 2026-03-19
+## [1.3.1] - 2026-03-19
 
 ### Fixed
+- **Critical: Tool-guard for Markdown fallback** — `extractMarkdownToolCalls()` now accepts an optional `allowedToolNames` set. Any fenced JSON block whose `name` field is not in the configured tool list is silently skipped, preventing data objects like `{"name":"Alice","age":30}` from being misclassified as tool-use turns and corrupting the conversation (sync from openclaw/openclaw#49179)
+- **Critical: Backtick support in JSON payloads** — Replaced the `[^\`]` character-class guard in the Markdown regex with a negative lookahead `(?!\`\`\`)`, allowing single or double backticks inside JSON string values (e.g. shell commands like `echo \`date\``). Previously any backtick in an argument value would cause extraction to fail (sync from openclaw/openclaw#49179)
+- **Refactor: makeMarkdownToolCallRe() factory** — Moved the Markdown tool-call regex into a factory function to ensure each call-site gets a fresh `RegExp` instance with `lastIndex = 0`, eliminating shared mutable state bugs
 - Critical runtime error with undefined variable `accumulatedBuffer`
 - Node.js compatibility issue with `navigator.onLine` reference
 - Throttling mechanism that skipped content accumulation and tool calls
 - Duplicate tool call pattern in extraction regex patterns
 - Incorrect reasoning model heuristics for non-reasoning models
+
+### Changed
+- `extractMarkdownToolCalls()` signature updated to accept optional `allowedToolNames?: Set<string>` parameter (fully backward compatible)
 
 ## [1.2.0] - 2026-03-18
 
