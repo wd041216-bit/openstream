@@ -392,13 +392,21 @@ export function buildAssistantMessage(
 // patterns and converts them into proper `OllamaToolCall` objects so the rest
 // of the pipeline can treat them identically to native tool calls.
 
-const MARKDOWN_TOOL_CALL_RE =
-  /```(?:json)?\s*\n?\s*\{[\s\S]*?"name"\s*:\s*"([^"]+)"[\s\S]*?\}\s*\n?```/g;
+// The regex is created via a factory function so each call-site gets a fresh
+// RegExp instance with lastIndex = 0, avoiding shared mutable state across
+// call-sites (extractMarkdownToolCalls + content stripping).
+//
+// The inner pattern uses a negative lookahead `(?!``)` to prevent matching
+// across fence boundaries (three consecutive backticks end the block) while
+// still allowing single or double backticks inside JSON string values (e.g.
+// shell commands like `echo \`date\``).  This is more permissive than the
+// previous `[^\`]` approach, which incorrectly rejected any backtick.
+function makeMarkdownToolCallRe(): RegExp {
+  return /```(?:json)?\s*\n?\s*(\{(?:(?!```)\s|\S)*?"name"\s*:\s*"[^"]+"(?:(?!```)\s|\S)*?\})\s*\n?```/g;
+}
 
 // Additional patterns for better tool call detection
-// Additional patterns for better tool call detection
 const ADDITIONAL_TOOL_CALL_PATTERNS = [
-  /```(?:json)?\s*\n?\s*\{[\s\S]*?"name"\s*:\s*"([^"]+)"[\s\S]*?\}\s*\n?```/g,
   /```(?:json)?\s*\n?\s*\{[\s\S]*?"function"\s*:\s*\{[\s\S]*?"name"\s*:\s*"([^"]+)"[\s\S]*?\}\s*\n?```/g,
   /\{[\s\S]*?"name"\s*:\s*"([^"]+)"[\s\S]*?"arguments"\s*:\s*(\{[\s\S]*?\})[\s\S]*?\}/g,
   /<tool_call>([\s\S]*?)<\/tool_call>/g,
@@ -453,21 +461,33 @@ function parseYamlToolCall(yamlContent: string): Record<string, unknown> {
   return result;
 }
 
-export function extractMarkdownToolCalls(content: string): OllamaToolCall[] {
+export function extractMarkdownToolCalls(
+  content: string,
+  allowedToolNames?: Set<string>,
+): OllamaToolCall[] {
   const results: OllamaToolCall[] = [];
-  
-  // Original pattern
+  const re = makeMarkdownToolCallRe();
+  // Primary pattern (via factory for fresh lastIndex)
   let match: RegExpExecArray | null;
-  MARKDOWN_TOOL_CALL_RE.lastIndex = 0;
-  while ((match = MARKDOWN_TOOL_CALL_RE.exec(content)) !== null) {
-    const raw = match[0]
+  while ((match = re.exec(content)) !== null) {
+    // match[1] is the captured JSON object (inside the fence), extracted
+    // directly by the capturing group — no need for post-hoc string replacement.
+    const raw = (match[1] ?? match[0]
       .replace(/^```(?:json)?\s*/i, "")
-      .replace(/\s*```$/, "")
+      .replace(/\s*```$/, ""))
       .trim();
     try {
       const parsed = parseJsonPreservingUnsafeIntegers(raw) as Record<string, unknown>;
       const name = typeof parsed.name === "string" ? parsed.name : undefined;
       if (!name) {
+        continue;
+      }
+      // Guard: only promote to a tool call when the name matches a configured
+      // tool.  Without this check any fenced JSON with a `name` field (e.g.
+      // `{"name":"Alice","age":30}`) would be reclassified as a tool-use turn,
+      // stripping the JSON from visible content and corrupting the conversation.
+      if (allowedToolNames && !allowedToolNames.has(name)) {
+        log.debug(`[manusilized] Skipping Markdown block: '${name}' is not a configured tool`);
         continue;
       }
       const args =
@@ -845,7 +865,15 @@ export function createOllamaStreamFn(
         // call inside a fenced code block, extract it as a fallback so that
         // open-source models that don't support structured output still work.
         if (accumulatedToolCalls.length === 0 && accumulatedContent) {
-          const markdownCalls = extractMarkdownToolCalls(accumulatedContent);
+          // Pass the configured tool names so random JSON objects with a
+          // `name` field are not misidentified as tool calls (manusilized fix).
+          const allowedNames = ollamaTools
+            ? new Set(ollamaTools.map((t: { function?: { name?: string }; name?: string }) =>
+                typeof t.function?.name === "string" ? t.function.name :
+                typeof t.name === "string" ? t.name : ""
+              ).filter(Boolean))
+            : undefined;
+          const markdownCalls = extractMarkdownToolCalls(accumulatedContent, allowedNames);
           if (markdownCalls.length > 0) {
             log.debug(
               `[manusilized] Extracted ${markdownCalls.length} tool call(s) from Markdown fallback`,
@@ -853,9 +881,9 @@ export function createOllamaStreamFn(
             accumulatedToolCalls.push(...markdownCalls);
             // Strip the tool-call JSON blocks from the visible content so the
             // user doesn't see raw JSON in the chat bubble.
+            // Use the factory regex for a fresh instance (no shared lastIndex)
             finalResponse.message.content = accumulatedContent
-              .replace(MARKDOWN_TOOL_CALL_RE, "")
-              .replace(/```(?:json)?\s*\{[\s\S]*?\}\s*```/g, "")
+              .replace(makeMarkdownToolCallRe(), "")
               .replace(/<tool_call>[\s\S]*?<\/tool_call>/g, "")
               .replace(/```(?:ya?ml)\s*\n[\s\S]*?\s*\n```/g, "")
               .trim();
