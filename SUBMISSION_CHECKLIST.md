@@ -1,4 +1,4 @@
-# Manusilized Submission Checklist
+# OpenStream Submission Checklist
 
 ## 📋 Repositories to Submit To
 
@@ -30,11 +30,11 @@
 1. Navigate to https://github.com/openclaw/openclaw
 2. Fork the repository (if not already done)
 3. Clone your fork locally
-4. Create a new branch: `feature/manusilized-enhancements`
+4. Create a new branch: `feature/openstream-enhancements`
 5. Replace the files:
    - `src/agents/ollama-stream.ts`
    - `src/agents/ollama-models.ts`
-6. Commit with message: "feat: Enhance OpenClaw with Manusilized - 2M Context + Advanced Streaming"
+6. Commit with message: "feat: Enhance OpenClaw with OpenStream - 2M Context + Advanced Streaming"
 7. Push to your fork
 8. Create Pull Request with the content from `PR_DESCRIPTION.md`
 
@@ -47,7 +47,7 @@
 ## 📦 Files to Include in All Submissions
 
 ```
-manusilized/
+openstream/
 ├── CHANGELOG.md
 ├── FUNCTIONS_AND_SOLUTIONS.md
 ├── README.md
@@ -58,7 +58,7 @@ manusilized/
 │   └── patches/
 │       ├── ollama-models.ts
 │       └── ollama-stream.ts
-├── test-manusilized.sh
+├── test-openstream.sh
 ├── PR_DESCRIPTION.md
 └── CLAWHUB_SUBMISSION.md
 ```

@@ -1,7 +1,7 @@
-# Manusilized Skill Submission
+# OpenStream Skill Submission
 
 ## 🎯 Skill Name
-Manusilized: OpenClaw Supercharger
+OpenStream: OpenClaw Supercharger
 
 ## 📝 Description
 Core architecture upgrades for OpenClaw: 2M context window support, advanced streaming, and improved tool-call reliability. Brings Manus-like silky-smooth experience to open-source models.
@@ -27,7 +27,7 @@ Via patch script included in skill package.
 - `README.md` - Comprehensive documentation
 - `FUNCTIONS_AND_SOLUTIONS.md` - Detailed feature explanation
 - `CHANGELOG.md` - Version history
-- `test-manusilized.sh` - Validation suite
+- `test-openstream.sh` - Validation suite
 
 ## 📝 License
 MIT License

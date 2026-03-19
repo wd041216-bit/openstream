@@ -19,7 +19,7 @@ import {
 } from "./stream-message-shared.js";
 
 // Import config utilities
-import { loadManusilizedConfig, applyStreamingMode, type ManusilizedConfig } from "./config-utils.js";
+import { loadOpenStreamConfig, applyStreamingMode, type OpenStreamConfig } from "./config-utils.js";
 
 const log = createSubsystemLogger("ollama-stream");
 
@@ -487,7 +487,7 @@ export function extractMarkdownToolCalls(
       // `{"name":"Alice","age":30}`) would be reclassified as a tool-use turn,
       // stripping the JSON from visible content and corrupting the conversation.
       if (allowedToolNames && !allowedToolNames.has(name)) {
-        log.debug(`[manusilized] Skipping Markdown block: '${name}' is not a configured tool`);
+        log.debug(`[openstream] Skipping Markdown block: '${name}' is not a configured tool`);
         continue;
       }
       const args =
@@ -498,7 +498,7 @@ export function extractMarkdownToolCalls(
             : {};
       results.push({ function: { name, arguments: args } });
     } catch {
-      log.warn(`[manusilized] Failed to parse Markdown tool call: ${raw.slice(0, 120)}`);
+      log.warn(`[openstream] Failed to parse Markdown tool call: ${raw.slice(0, 120)}`);
     }
   }
   
@@ -537,7 +537,7 @@ export function extractMarkdownToolCalls(
               
         results.push({ function: { name, arguments: args } });
       } catch (err) {
-        log.warn(`[manusilized] Failed to parse additional tool call pattern: ${match[0].slice(0, 120)}`);
+        log.warn(`[openstream] Failed to parse additional tool call pattern: ${match[0].slice(0, 120)}`);
       }
     }
   }
@@ -639,7 +639,7 @@ export function createOllamaStreamFn(
   configPath?: string,
 ): StreamFn {
   // Load configuration from file if available
-  let baseConfig: ManusilizedConfig = {
+  let baseConfig: OpenStreamConfig = {
     streaming: {
       mode: "standard",
       bufferSize: 1024,
@@ -656,12 +656,12 @@ export function createOllamaStreamFn(
   
   // Try to load config from file
   try {
-    if (loadManusilizedConfig) {
-      const fileConfig = loadManusilizedConfig(configPath);
+    if (loadOpenStreamConfig) {
+      const fileConfig = loadOpenStreamConfig(configPath);
       baseConfig = { ...baseConfig, ...fileConfig };
     }
   } catch (err) {
-    console.warn("[manusilized] Failed to load config file, using defaults:", err);
+    console.warn("[openstream] Failed to load config file, using defaults:", err);
   }
   
   // Apply streaming mode presets
@@ -769,7 +769,7 @@ export function createOllamaStreamFn(
             for await (const chunk of parseNdjsonStream(reader, config.bufferSize)) {
               const currentTime = Date.now();
               
-              // ── Real-time text_delta events (manusilized: incremental streaming) ──
+              // ── Real-time text_delta events (openstream: incremental streaming) ──
               // Emit each content fragment immediately so the UI can render a
               // live typewriter effect instead of waiting for the full response.
               if (chunk.message?.content) {
@@ -818,7 +818,7 @@ export function createOllamaStreamFn(
               throw err; // Re-throw if max retries exceeded
             }
             
-            log.warn(`[manusilized] Stream parsing failed, retry ${retryCount}/${maxRetries}:`, err);
+            log.warn(`[openstream] Stream parsing failed, retry ${retryCount}/${maxRetries}:`, err);
             
             // Wait before retry with exponential backoff
             await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
@@ -847,13 +847,13 @@ export function createOllamaStreamFn(
           }),
         });
 
-        // ── Markdown tool-call fallback (manusilized: fault-tolerant adapter) ──
+        // ── Markdown tool-call fallback (openstream: fault-tolerant adapter) ──
         // If the model produced no native tool_calls but embedded a JSON tool
         // call inside a fenced code block, extract it as a fallback so that
         // open-source models that don't support structured output still work.
         if (accumulatedToolCalls.length === 0 && accumulatedContent) {
           // Pass the configured tool names so random JSON objects with a
-          // `name` field are not misidentified as tool calls (manusilized fix).
+          // `name` field are not misidentified as tool calls (openstream fix).
           const allowedNames = ollamaTools
             ? new Set(ollamaTools.map((t: { function?: { name?: string }; name?: string }) =>
                 typeof t.function?.name === "string" ? t.function.name :
@@ -863,7 +863,7 @@ export function createOllamaStreamFn(
           const markdownCalls = extractMarkdownToolCalls(accumulatedContent, allowedNames);
           if (markdownCalls.length > 0) {
             log.debug(
-              `[manusilized] Extracted ${markdownCalls.length} tool call(s) from Markdown fallback`,
+              `[openstream] Extracted ${markdownCalls.length} tool call(s) from Markdown fallback`,
             );
             accumulatedToolCalls.push(...markdownCalls);
             // Strip the tool-call JSON blocks from the visible content so the

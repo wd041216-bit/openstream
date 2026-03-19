@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join as pathJoin } from "node:path";
 
-export interface ManusilizedConfig {
+export interface OpenStreamConfig {
   streaming?: {
     mode?: "standard" | "enhanced" | "ultra";
     bufferSize?: number;
@@ -17,34 +17,34 @@ export interface ManusilizedConfig {
 }
 
 /**
- * Load Manusilized configuration from config file
+ * Load OpenStream configuration from config file
  * @param configPath Path to the OpenClaw config directory
- * @returns ManusilizedConfig or default config if not found
+ * @returns OpenStreamConfig or default config if not found
  */
-export function loadManusilizedConfig(configPath?: string): ManusilizedConfig {
+export function loadOpenStreamConfig(configPath?: string): OpenStreamConfig {
   // Try to find config file in common locations
   const possiblePaths = [
-    configPath ? pathJoin(configPath, "manusilized-streaming.json") : "",
-    pathJoin(process.cwd(), "config", "manusilized-streaming.json"),
-    pathJoin(process.cwd(), "manusilized-streaming.json"),
-    "/etc/openclaw/manusilized-streaming.json",
+    configPath ? pathJoin(configPath, "openstream-streaming.json") : "",
+    pathJoin(process.cwd(), "config", "openstream-streaming.json"),
+    pathJoin(process.cwd(), "openstream-streaming.json"),
+    "/etc/openclaw/openstream-streaming.json",
   ].filter(Boolean) as string[];
 
   for (const configFilePath of possiblePaths) {
     if (existsSync(configFilePath)) {
       try {
         const configFile = readFileSync(configFilePath, "utf8");
-        const config = JSON.parse(configFile) as ManusilizedConfig;
-        console.log(`[manusilized] Loaded config from ${configFilePath}`);
+        const config = JSON.parse(configFile) as OpenStreamConfig;
+        console.log(`[openstream] Loaded config from ${configFilePath}`);
         return config;
       } catch (err) {
-        console.warn(`[manusilized] Failed to parse config file ${configFilePath}:`, err);
+        console.warn(`[openstream] Failed to parse config file ${configFilePath}:`, err);
       }
     }
   }
 
   // Return default config if no file found
-  console.log("[manusilized] Using default configuration");
+  console.log("[openstream] Using default configuration");
   return {
     streaming: {
       mode: "standard",
@@ -66,7 +66,7 @@ export function loadManusilizedConfig(configPath?: string): ManusilizedConfig {
  * @param config Base configuration
  * @returns Configuration with streaming mode applied
  */
-export function applyStreamingMode(config: ManusilizedConfig): ManusilizedConfig {
+export function applyStreamingMode(config: OpenStreamConfig): OpenStreamConfig {
   const mode = config.streaming?.mode || "standard";
   
   switch (mode) {

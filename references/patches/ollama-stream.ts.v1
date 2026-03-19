@@ -415,7 +415,7 @@ export function extractMarkdownToolCalls(content: string): OllamaToolCall[] {
             : {};
       results.push({ function: { name, arguments: args } });
     } catch {
-      log.warn(`[manusilized] Failed to parse Markdown tool call: ${raw.slice(0, 120)}`);
+      log.warn(`[openstream] Failed to parse Markdown tool call: ${raw.slice(0, 120)}`);
     }
   }
   return results;
@@ -559,7 +559,7 @@ export function createOllamaStreamFn(
         });
 
         for await (const chunk of parseNdjsonStream(reader)) {
-          // ── Real-time text_delta events (manusilized: incremental streaming) ──
+          // ── Real-time text_delta events (openstream: incremental streaming) ──
           // Emit each content fragment immediately so the UI can render a
           // live typewriter effect instead of waiting for the full response.
           if (chunk.message?.content) {
@@ -595,7 +595,7 @@ export function createOllamaStreamFn(
 
         finalResponse.message.content = accumulatedContent;
 
-        // ── Markdown tool-call fallback (manusilized: fault-tolerant adapter) ──
+        // ── Markdown tool-call fallback (openstream: fault-tolerant adapter) ──
         // If the model produced no native tool_calls but embedded a JSON tool
         // call inside a fenced code block, extract it as a fallback so that
         // open-source models that don't support structured output still work.
@@ -603,7 +603,7 @@ export function createOllamaStreamFn(
           const markdownCalls = extractMarkdownToolCalls(accumulatedContent);
           if (markdownCalls.length > 0) {
             log.debug(
-              `[manusilized] Extracted ${markdownCalls.length} tool call(s) from Markdown fallback`,
+              `[openstream] Extracted ${markdownCalls.length} tool call(s) from Markdown fallback`,
             );
             accumulatedToolCalls.push(...markdownCalls);
             // Strip the tool-call JSON blocks from the visible content so the

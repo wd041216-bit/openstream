@@ -1,6 +1,6 @@
-# Manusilized: The OpenClaw Supercharger
+# OpenStream: Smooth Streaming for OpenClaw
 
-**Manusilized** is not just a skill; it's a comprehensive upgrade for your OpenClaw agent, bringing enterprise-grade reliability and a "Manus-like" silky-smooth experience to open-source models (like Qwen, GLM, DeepSeek).
+**OpenStream** is a comprehensive enhancement for your OpenClaw agent, delivering enterprise-grade reliability and silky-smooth streaming experiences to open-source models (like Qwen, GLM, DeepSeek).
 
 ## 🌟 Key Features
 
@@ -53,17 +53,17 @@
 
 ## 🛠️ Installation & Setup
 
-Since Manusilized modifies the core `agents` architecture of OpenClaw, it cannot be installed merely as a standard skill folder.
+Since OpenStream modifies the core `agents` architecture of OpenClaw, it cannot be installed merely as a standard skill folder.
 
 ### Option 1: The Official PR (Recommended)
 We have submitted these upgrades as a core PR to the OpenClaw repository.
 👉 **[View and Upvote the PR on GitHub](https://github.com/openclaw/openclaw/pulls)**
 
 ### Option 2: Manual Patch
-If you want to experience Manusilized immediately before the PR is merged, you can apply our patch directly to your OpenClaw installation:
+If you want to experience OpenStream immediately before the PR is merged, you can apply our patch directly to your OpenClaw installation:
 
 1. Clone the OpenClaw repository.
-2. Download the Manusilized patch files from our [GitHub repository](https://github.com/manusilized/manusilized).
+2. Download the OpenStream patch files from our [GitHub repository](https://github.com/openstream/openstream).
 3. Replace the corresponding files in `src/agents/` (`ollama-stream.ts` and `ollama-models.ts`).
 4. Rebuild OpenClaw.
 
@@ -85,7 +85,7 @@ If you want to experience Manusilized immediately before the PR is merged, you c
 
 ## ⚙️ Configuration
 
-Manusilized generates a configuration file at `config/manusilized-streaming.json` with the following options:
+OpenStream generates a configuration file at `config/openstream-streaming.json` with the following options:
 
 ```json
 {
@@ -115,7 +115,7 @@ Manusilized generates a configuration file at `config/manusilized-streaming.json
 
 ## 🧪 Supported Models
 
-Manusilized has been tested with the following models:
+OpenStream has been tested with the following models:
 - Qwen3 series (4B, 8B, 32B, 72B, 110B)
 - GLM-5 series
 - DeepSeek V3

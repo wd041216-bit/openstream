@@ -1,6 +1,6 @@
-# Manusilized Core Patches
+# OpenStream Core Patches
 
-This directory contains the modified core files for OpenClaw. Since Manusilized upgrades the core architecture (specifically the Ollama provider), it cannot be installed merely as a standalone skill.
+This directory contains the modified core files for OpenClaw. Since OpenStream upgrades the core architecture (specifically the Ollama provider), it cannot be installed merely as a standalone skill.
 
 ## How to apply
 

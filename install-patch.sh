@@ -1,7 +1,7 @@
 #!/bin/bash
-# Script to apply Manusilized patches to a local OpenClaw installation
+# Script to apply OpenStream patches to a local OpenClaw installation
 
-echo "🚀 Welcome to the Manusilized Patch Installer!"
+echo "🚀 Welcome to the OpenStream Patch Installer!"
 echo ""
 
 # Parse command line arguments
@@ -81,7 +81,7 @@ CONFIG_DIR="$OPENCLAW_PATH/config"
 mkdir -p "$CONFIG_DIR"
 
 # Write streaming configuration
-cat > "$CONFIG_DIR/manusilized-streaming.json" << EOF
+cat > "$CONFIG_DIR/openstream-streaming.json" << EOF
 {
   "streaming": {
     "mode": "$STREAMING_MODE",
@@ -99,8 +99,8 @@ cat > "$CONFIG_DIR/manusilized-streaming.json" << EOF
 EOF
 
 echo ""
-echo "✅ Success! Manusilized patches have been applied."
-echo "Configuration has been written to $CONFIG_DIR/manusilized-streaming.json"
+echo "✅ Success! OpenStream patches have been applied."
+echo "Configuration has been written to $CONFIG_DIR/openstream-streaming.json"
 
 if [ "$ENABLE_MEGA_CONTEXT" = true ]; then
   echo "🌐 Mega context window support (up to 2M tokens) has been enabled."

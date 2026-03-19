@@ -1,7 +1,7 @@
 #!/bin/bash
-# Test script for Manusilized functionality
+# Test script for OpenStream functionality
 
-echo "🧪 Manusilized Test Suite"
+echo "🧪 OpenStream Test Suite"
 echo "========================"
 
 # Test 1: Check if required files exist

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.2] - 2026-03-19
+
+### Changed
+- **Project renamed from Manusilized to OpenStream** — To better align with open-source community values and avoid potential trademark issues
+- **Privacy protection features added** — Implemented comprehensive filtering for sensitive information including personal IDs, phone numbers, email addresses, financial data, authentication credentials, and network information
+
+### Fixed
+- Removed duplicate tool call pattern that could cause double processing
+- Enhanced reasoning model heuristic to exclude non-reasoning models (`deepseek-v3`, `mistral.*large`, `command.*r`)
+- Improved streaming logic to ensure content accumulation continues during throttling
+
 ## [1.3.1] - 2026-03-19
 
 ### Fixed
@@ -49,7 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2026-03-18
 
 ### Added
-- Initial release with core Manusilized features
+- Initial release with core OpenStream features
 - Incremental streaming for real-time text delta
 - Markdown tool-call fallback mechanism
 - Extended reasoning model support
@@ -62,7 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2026-03-17
 
 ### Added
-- Initial release of Manusilized
+- Initial release of OpenStream
 - Core streaming enhancements
 - Basic tool-call fallback functionality
 - Reasoning model recognition

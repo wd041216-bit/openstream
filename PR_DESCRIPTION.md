@@ -1,8 +1,8 @@
-# Enhance OpenClaw with Manusilized: 2M Context + Advanced Streaming
+# Enhance OpenClaw with OpenStream: 2M Context + Advanced Streaming
 
 ## 🎯 Overview
 
-This PR introduces Manusilized, a comprehensive enhancement package for OpenClaw that brings enterprise-grade reliability and a "Manus-like" silky-smooth experience to open-source models.
+This PR introduces OpenStream, a comprehensive enhancement package for OpenClaw that brings enterprise-grade reliability and a "Manus-like" silky-smooth experience to open-source models.
 
 ## 🔧 Key Enhancements
 

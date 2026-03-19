@@ -1,8 +1,8 @@
-# Manusilized: Core Architecture Upgrades for OpenClaw
+# OpenStream: Core Architecture Upgrades for OpenClaw
 
 ## 🎯 Overview
 
-Manusilized is a comprehensive enhancement package for OpenClaw that brings enterprise-grade reliability and a "Manus-like" silky-smooth experience to open-source models. It solves critical pain points in streaming, tool calling, and context management.
+OpenStream is a comprehensive enhancement package for OpenClaw that delivers enterprise-grade reliability and silky-smooth streaming experiences to open-source models. It solves critical pain points in streaming, tool calling, and context management.
 
 ## 🔧 Key Functions
 
@@ -34,7 +34,7 @@ Manusilized is a comprehensive enhancement package for OpenClaw that brings ente
 ### Problem 1: Jerky Streaming Experience
 **痛点**: Users experience blank screens and delayed responses while models process requests.
 
-**Solution**: Manusilized introduces real-time `text_delta` streaming that mirrors closed-source giants, providing a live typewriter effect that keeps users engaged.
+**Solution**: OpenStream introduces real-time `text_delta` streaming that mirrors closed-source giants, providing a live typewriter effect that keeps users engaged.
 
 ### Problem 2: Tool Call Failures with Open-Source Models
 **痛点**: Many open-source models fail with native JSON Function Calling, embedding tool calls in Markdown instead.
@@ -101,8 +101,8 @@ Manusilized is a comprehensive enhancement package for OpenClaw that brings ente
 
 ## 📈 Value Proposition
 
-Manusilized transforms OpenClaw from a functional tool into a premium experience:
-- **Users** get manuscript-quality interaction
+OpenStream transforms OpenClaw from a functional tool into a premium experience:
+- **Users** get professional-grade interaction
 - **Developers** gain reliability and performance
 - **Organizations** achieve professional-grade AI deployment
 

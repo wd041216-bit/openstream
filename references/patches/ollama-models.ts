@@ -302,7 +302,7 @@ function detectLocalModel(model: OllamaTagModel): boolean {
  * reasoning models.  The list is intentionally broad to cover the rapidly
  * evolving open-source landscape (2025-2026).
  *
- * Patterns added by manusilized:
+ * Patterns added by openstream:
  *   - qwen3          (Qwen3 series – all variants have extended thinking)
  *   - qwq            (QwQ reasoning model family)
  *   - glm-?5 / glm5   (GLM-5 supports deep reasoning)
