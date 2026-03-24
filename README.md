@@ -35,6 +35,8 @@ Details:
 
 - [docs/architecture.md](docs/architecture.md)
 - [docs/why-core.md](docs/why-core.md)
+- [docs/compatibility-matrix.md](docs/compatibility-matrix.md)
+- [docs/validation-plan.md](docs/validation-plan.md)
 
 ## What Changes
 
@@ -59,10 +61,18 @@ These are runtime concerns, which is why this repo should be judged as a core/pl
   local helper that copies the patch files into an OpenClaw checkout
 - [test-openstream.sh](test-openstream.sh)
   lightweight repository validation
+- [scripts/check-openclaw-target.sh](scripts/check-openclaw-target.sh)
+  validates a candidate OpenClaw checkout before patching
+- [scripts/generate-openclaw-diff.sh](scripts/generate-openclaw-diff.sh)
+  produces unified diffs for maintainer review
 - [docs/architecture.md](docs/architecture.md)
   system boundaries and change surface
 - [docs/why-core.md](docs/why-core.md)
   rationale for core-first packaging
+- [docs/compatibility-matrix.md](docs/compatibility-matrix.md)
+  current compatibility contract and baseline expectations
+- [docs/validation-plan.md](docs/validation-plan.md)
+  evidence required before formal maintainer submission
 - [PR_DESCRIPTION.md](PR_DESCRIPTION.md)
   maintainer-facing PR draft
 
@@ -79,6 +89,7 @@ bash ./test-openstream.sh
 ### 2. Apply the patch to an OpenClaw checkout
 
 ```bash
+./scripts/check-openclaw-target.sh /path/to/openclaw
 ./install-patch.sh /path/to/openclaw
 ```
 
@@ -104,6 +115,12 @@ Suggested checks:
 - confirm malformed markdown/json tool calls are either recovered or surfaced cleanly
 - confirm larger context heuristics are applied only to intended model families
 - compare behavior against an unpatched baseline on the same OpenClaw revision
+
+### 5. Generate maintainer-facing diffs
+
+```bash
+./scripts/generate-openclaw-diff.sh /path/to/openclaw
+```
 
 ## Important Limits
 

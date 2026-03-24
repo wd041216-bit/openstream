@@ -1,0 +1,10 @@
+{
+  "id": "markdown-tool-call-basic",
+  "purpose": "Verify that markdown-embedded JSON tool calls can be extracted or handled without leaking raw JSON into visible assistant content.",
+  "input_excerpt": "```json\n{\"name\":\"search_web\",\"arguments\":{\"query\":\"latest qwen3 release\"}}\n```",
+  "expected_behavior": [
+    "tool call is detected or cleanly skipped according to allowed tool names",
+    "raw fenced JSON should not remain in final visible assistant content when recovery succeeds"
+  ],
+  "notes": "This is a replay-fixture skeleton, not yet wired into automated integration tests."
+}

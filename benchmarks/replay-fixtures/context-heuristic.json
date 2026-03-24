@@ -1,0 +1,7 @@
+{
+  "id": "context-heuristic-qwen3",
+  "purpose": "Document expected context-window behavior for a newer model family with extended heuristic support.",
+  "model_name": "qwen3:110b",
+  "expected_context_window": 2097152,
+  "notes": "This fixture records the intended heuristic outcome and should later be validated against a pinned OpenClaw baseline."
+}
